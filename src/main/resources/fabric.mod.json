@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "pokebuilder",
+	"version": "${version}",
+	"name": "PokeBuilder",
+	"description": "",
+	"authors": [
+		"Blue"
+	],
+	"contact": {},
+	"license": "All-Rights-Reserved",
+	"icon": "assets/PokeBuilder/icon.png",
+	"environment": "server",
+	"entrypoints": {
+		"client": [
+			"dev.blu3.pokebuilder.client.PokeBuilderClient"
+		],
+		"main": [
+			"dev.blu3.pokebuilder.PokeBuilder"
+		]
+	},
+	"depends": {
+		"fabricloader": "*",
+		"fabric": "*",
+		"gooeylibs": "*",
+		"cobblemon": "*",
+		"minecraft": "*"
+	}
+}
