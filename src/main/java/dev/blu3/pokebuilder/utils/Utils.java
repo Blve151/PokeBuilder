@@ -12,14 +12,17 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.abilities.HiddenAbilityType;
 import com.cobblemon.mod.common.util.DataKeys;
 import com.google.common.collect.Lists;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Unit;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,15 +91,16 @@ public class Utils {
         return list.contains(pokemon.getSpecies().getName()) || list.contains("legend") && pokemon.isLegendary() || list.contains("ultrabeast") && pokemon.isUltraBeast();
     }
 
-//    public static ItemStack removeTooltips(ItemStack stack) {
-//        for (ItemStack.TooltipPart part : ItemStack.TooltipPart.values()) {
-//            stack.hideTooltipPart(part);
-//        }
-//        CompoundTag baseTag = stack.getOrCreateTag();
-//        baseTag.putBoolean(DataKeys.HIDE_TOOLTIP, true);
-//        stack.setTag(baseTag);
-//        return stack;
-//    }
+    public static ItemStack removeTooltips(ItemStack stack) {
+        stack.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        stack.set(DataComponents.HIDE_TOOLTIP, Unit.INSTANCE);
+        return stack;
+    }
+
+    public static ItemStack setStackName (ItemStack stack, String name){
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+        return stack;
+    }
 
     public static boolean canChangeGender(Pokemon pokemon) {
         return !(pokemon.getSpecies().getMaleRatio() == 0) && !pokemon.getGender().equals(Gender.GENDERLESS);

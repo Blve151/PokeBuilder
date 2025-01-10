@@ -44,8 +44,7 @@ public class PokeBuilderUI {
         PlaceholderButton placeholder = new PlaceholderButton();
 
         Button pc = GooeyButton.builder()
-                .display(new ItemStack(CobblemonItems.PC))
-                .title(dataManager.getGuiText().pcMenu)
+                .display(Utils.setStackName(new ItemStack(CobblemonItems.PC), dataManager.getGuiText().pcMenu))
                 .onClick(action -> UIManager.openUIForcefully(player, pcUI(player)))
                 .build();
 

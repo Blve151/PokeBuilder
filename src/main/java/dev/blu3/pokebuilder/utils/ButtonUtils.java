@@ -20,6 +20,7 @@ import com.cobblemon.mod.common.pokemon.*;
 import dev.blu3.pokebuilder.PokeBuilder;
 import dev.blu3.pokebuilder.enums.BuilderAttribute;
 import dev.blu3.pokebuilder.enums.BuilderSelection;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
@@ -44,8 +45,8 @@ public class ButtonUtils {
 
     public static Button colouredPane(String paneName) {
         ItemStack pane = new ItemStack(PokeBuilder.stringPaneMap.getOrDefault(paneName, Items.WHITE_STAINED_GLASS_PANE));
+        pane.set(DataComponents.CUSTOM_NAME, Component.literal(""));
         return GooeyButton.builder()
-                .title("")
                 .display(pane)
                 .build();
     }
@@ -60,15 +61,10 @@ public class ButtonUtils {
                 pokeList.add(party.get(i));
             }
         } else {
-            PCStore pc = null;
-            try {
-                pc = Cobblemon.INSTANCE.getStorage().getPC(player.getUUID());
-            } catch (NoPokemonStoreException ignored) {
-            }
-            if (pc != null) {
-                for (Pokemon pokemon : pc) {
-                    pokeList.add(pokemon);
-                }
+            PCStore pc;
+            pc = Cobblemon.INSTANCE.getStorage().getPC(player);
+            for (Pokemon pokemon : pc) {
+                pokeList.add(pokemon);
             }
         }
 
