@@ -1,6 +1,7 @@
 package dev.blu3.pokebuilder.utils;
 
 import ca.landonjw.gooeylibs2.api.UIManager;
+import ca.landonjw.gooeylibs2.api.button.GooeyButton;
 import com.cobblemon.mod.common.CobblemonItems;
 import com.cobblemon.mod.common.api.abilities.PotentialAbility;
 import com.cobblemon.mod.common.api.pokemon.stats.Stats;
@@ -26,6 +27,7 @@ import java.util.NavigableMap;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static dev.blu3.pokebuilder.PokeBuilder.dataManager;
 
@@ -161,5 +163,17 @@ public class Utils {
             if(evCount > 0) return false;
         }
         return evCount == 0;
+    }
+
+    public static List<Component> convertStringListToComponentList(List<String> list) {
+        return list.stream()
+                .map(Component::literal)
+                .collect(Collectors.toList());
+    }
+
+    public static void updateBuilderTitle(GooeyButton.Builder builder, String title) {
+        ItemStack displayStack = builder.build().getDisplay();
+        displayStack.set(DataComponents.CUSTOM_NAME, Component.literal(title));
+        builder.display(displayStack);
     }
 }
