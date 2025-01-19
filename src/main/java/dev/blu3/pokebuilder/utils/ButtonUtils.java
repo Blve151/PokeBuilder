@@ -10,7 +10,6 @@ import com.cobblemon.mod.common.api.abilities.Ability;
 import com.cobblemon.mod.common.api.abilities.PotentialAbility;
 import com.cobblemon.mod.common.api.pokemon.Natures;
 import com.cobblemon.mod.common.api.pokemon.stats.Stats;
-import com.cobblemon.mod.common.api.storage.NoPokemonStoreException;
 import com.cobblemon.mod.common.api.storage.party.PlayerPartyStore;
 import com.cobblemon.mod.common.api.storage.pc.PCStore;
 import com.cobblemon.mod.common.item.PokeBallItem;
@@ -27,12 +26,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackLinkedSet;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.block.Blocks;
 
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,26 +79,21 @@ public class ButtonUtils {
                         .build();
                 buttonList.add(nullPokes);
                 itemStackPhoto.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().emptySlot));
-                //itemStackPhoto.setHoverName(Component.literal(dataManager.getGuiText().emptySlot));
             } else if (listContainsPokemon(dataManager.getGeneral().blacklistedPokemon, pokeStack)) {
                 itemStackPhoto = PokemonItem.from(pokeStack);
                 itemStackPhoto.set(DataComponents.CUSTOM_NAME, Component.literal(getPokeInfoName(pokeStack)));
                 itemStackPhoto.set(DataComponents.LORE, new ItemLore(Collections.singletonList((Component.literal(dataManager.getGuiText().blacklistedSlot)))));
-                //itemStackPhoto.setHoverName(Component.literal(getPokeInfoName(pokeStack)));
                 Button nullPokes = GooeyButton.builder()
                         .display(itemStackPhoto)
-                        //.lore(Collections.singletonList((dataManager.getGuiText().blacklistedSlot)))
                         .build();
                 buttonList.add(nullPokes);
             } else {
                 itemStackPhoto = PokemonItem.from(pokeStack);
                 itemStackPhoto.set(DataComponents.CUSTOM_NAME, Component.literal(getPokeInfoName(pokeStack)));
-                //itemStackPhoto.setHoverName(Component.literal(getPokeInfoName(pokeStack)));
                 itemStackPhoto.set(DataComponents.LORE,
                         new ItemLore(convertStringListToComponentList(getDesc(pokeStack, false))));
                 Button pokes = GooeyButton.builder()
                         .display(itemStackPhoto)
-                        //.lore(getDesc(pokeStack, false))
                         .onClick(buttonAction -> {
                             PokeBuilderClickedData clickedData = getClickedData(player);
                             clickedData.currentPokemon = pokeStack;
@@ -123,8 +115,6 @@ public class ButtonUtils {
                         false))));
         return GooeyButton.builder()
                 .display(itemStack)
-                //.title(getPokeInfoName(pokemon))
-                //.lore(getDesc(pokemon, false))
                 .build();
     }
 
@@ -157,7 +147,6 @@ public class ButtonUtils {
                 itemStack.set(DataComponents.CUSTOM_NAME, Component.literal((dataManager.getGuiText().currentNature)));
                 Button existing = GooeyButton.builder()
                         .display(itemStack)
-                        //.title((dataManager.getGuiText().currentNature))
                         .onClick(action -> {
                         })
                         .build();
@@ -167,7 +156,6 @@ public class ButtonUtils {
                 mintStack.set(DataComponents.CUSTOM_NAME, Component.literal("§a" + natureStr + " Nature"));
                 Button mint = GooeyButton.builder()
                         .display(mintStack)
-                        //.title("§a" + natureStr + " Nature")
                         .onClick(action -> {
                             ServerPlayer player = action.getPlayer();
                             PokeBuilderClickedData clickedData = getClickedData(player);
@@ -245,7 +233,6 @@ public class ButtonUtils {
                     new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().currentGender))));
             maleBuilder.display(itemStack);
             maleBuilder
-                    //.lore(Collections.singletonList(dataManager.getGuiText().currentGender))
                     .onClick(action -> {
                     })
                     .build();
@@ -267,7 +254,6 @@ public class ButtonUtils {
                     new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().currentGender))));
             femaleBuilder.display(itemStack);
             femaleBuilder
-                    //.lore(Collections.singletonList(dataManager.getGuiText().currentGender))
                     .onClick(action -> {
                     })
                     .build();
@@ -289,7 +275,6 @@ public class ButtonUtils {
                     new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().currentGender))));
             femaleBuilder.display(itemStack);
             femaleBuilder
-                    //.lore(Collections.singletonList(dataManager.getGuiText().genderChange))
                     .onClick(action -> {
                     })
                     .build();
@@ -299,7 +284,6 @@ public class ButtonUtils {
                     new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().currentGender))));
             maleBuilder.display(maleStack);
             maleBuilder
-                    //.lore(Collections.singletonList(dataManager.getGuiText().genderChange))
                     .onClick(action -> {
                     })
                     .build();
@@ -400,7 +384,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList((dataManager.getGuiText().isMaxIVs)));
                 } else if (pokemon.getIvs().get(stat) == 31) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
                     itemStack.set(DataComponents.LORE,
@@ -409,7 +392,6 @@ public class ButtonUtils {
                             .display(new ItemStack(Blocks.BARRIER))
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList((dataManager.getGuiText().isMaxIVStat)));
                 }
                 break;
             case EVS:
@@ -421,7 +403,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList((dataManager.getGuiText().isMaxEVs)));
                 } else if (pokemon.getEvs().get(stat) == 252) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
                     itemStack.set(DataComponents.LORE,
@@ -430,7 +411,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList((dataManager.getGuiText().isMaxEVStat)));
                 }
                 break;
             default:
@@ -456,7 +436,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cThis Pokemon can't lower its IVs!")));
                 } else if (ivs.get(stat) == 0) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
                     itemStack.set(DataComponents.LORE, new ItemLore(
@@ -465,7 +444,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cThis stat can't be lowered!")));
                 }
                 break;
             case EVS:
@@ -477,7 +455,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cThis Pokemon can't lower its EVs!")));
                 } else if (pokemon.getEvs().get(stat) == 0) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
                     itemStack.set(DataComponents.LORE, new ItemLore(
@@ -486,7 +463,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cThis stat can't be lowered!")));
                 }
                 break;
             default:
@@ -517,7 +493,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches over max IV.")));
 
                 }
                 if (ivs.get(currentStat) + 10 > 31) {
@@ -528,7 +503,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches over max IV.")));
 
                 }
                 if (ivs.get(currentStat) + 25 > 31) {
@@ -539,8 +513,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches over max IV.")));
-
                 }
             }
             case DECREASE -> {
@@ -552,8 +524,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches negative IVs.")));
-
                 }
                 if (ivs.get(currentStat) - 10 < 0) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
@@ -563,8 +533,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches negative IVs.")));
-
                 }
                 if (ivs.get(currentStat) - 25 < 0) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
@@ -574,7 +542,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches negative IVs.")));
                 }
             }
             default -> {
@@ -606,8 +573,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches over max EVs.")));
-
                 }
                 if (evs.get(currentStat) + 10 > 252) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
@@ -617,8 +582,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches over max EVs.")));
-
                 }
                 if (evs.get(currentStat) + 25 > 252) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
@@ -628,8 +591,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches over max EVs.")));
-
                 }
             }
             case DECREASE -> {
@@ -641,8 +602,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches negative EVs.")));
-
                 }
                 if (evs.get(currentStat) - 10 < 0) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
@@ -652,8 +611,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches negative EVs.")));
-
                 }
                 if (evs.get(currentStat) - 25 < 0) {
                     ItemStack itemStack = new ItemStack(Blocks.BARRIER);
@@ -663,7 +620,6 @@ public class ButtonUtils {
                             .display(itemStack)
                             .onClick(action -> {
                             });
-                            //.lore(Collections.singletonList(("§cResult reaches negative EVs.")));
                 }
             }
             default -> {

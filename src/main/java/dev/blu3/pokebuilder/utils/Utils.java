@@ -100,7 +100,7 @@ public class Utils {
     }
 
     public static ItemStack setStackName (ItemStack stack, String name){
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal(regex(name)));
         return stack;
     }
 

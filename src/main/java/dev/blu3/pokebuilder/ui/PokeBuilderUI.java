@@ -35,12 +35,14 @@ import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.block.Blocks;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.xml.crypto.Data;
 import java.util.Arrays;
 import java.util.Collections;
 
 import static dev.blu3.pokebuilder.PokeBuilder.dataManager;
 import static dev.blu3.pokebuilder.utils.ButtonUtils.*;
 import static dev.blu3.pokebuilder.utils.Utils.*;
+import static net.minecraft.network.chat.Component.literal;
 
 
 public class PokeBuilderUI {
@@ -49,7 +51,7 @@ public class PokeBuilderUI {
         PlaceholderButton placeholder = new PlaceholderButton();
 
         Button pc = GooeyButton.builder()
-                .display(Utils.setStackName(new ItemStack(CobblemonItems.PC), dataManager.getGuiText().pcMenu))
+                .display(setStackName(new ItemStack(CobblemonItems.PC), dataManager.getGuiText().pcMenu))
                 .onClick(action -> UIManager.openUIForcefully(player, pcUI(player)))
                 .build();
 
@@ -72,42 +74,28 @@ public class PokeBuilderUI {
 
         PlaceholderButton placeholder = new PlaceholderButton();
 
-        ItemStack stack = new ItemStack(Items.ARROW);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().pcFirstPage));
         Button first = GooeyButton.builder()
-                .display(stack)
-                //.title(dataManager.getGuiText().pcFirstPage)
+                .display(setStackName(new ItemStack(Items.ARROW), dataManager.getGuiText().pcFirstPage))
                 .onClick(action -> UIManager.openUIForcefully(player, pcUI(player)))
                 .build();
 
-        ItemStack stack2 = new ItemStack(Items.ARROW);
-        stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().previous));
         LinkedPageButton previous = LinkedPageButton.builder()
-                .display(stack2)
-                //.title(dataManager.getGuiText().previous)
+                .display(setStackName(new ItemStack(Items.ARROW), dataManager.getGuiText().previous))
                 .linkType(LinkType.Previous)
                 .build();
 
-        ItemStack stack3 = new ItemStack(Items.GOLDEN_CARROT);
-        stack3.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
-                .display(stack3)
-                //.title(dataManager.getGuiText().back)
+                .display(setStackName(new ItemStack(Items.GOLDEN_CARROT), dataManager.getGuiText().back))
                 .onClick(action -> UIManager.openUIForcefully(player, menuUI(player))).build();
 
-        ItemStack stack4 = new ItemStack(Items.CARROT);
-        stack4.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().pcNextPage));
         LinkedPageButton next = LinkedPageButton.builder()
-                .display(stack4)
-                //.title(dataManager.getGuiText().pcNextPage)
+                .display(setStackName(new ItemStack(Items.CARROT), dataManager.getGuiText().pcNextPage))
                 .linkType(LinkType.Next)
                 .build();
 
-        ItemStack stack5 = new ItemStack(Items.CARROT);
-        stack5.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().pcLastPage));
+
         Button last = GooeyButton.builder()
-                .display(stack5)
-                //.title(dataManager.getGuiText().pcLastPage)
+                .display(setStackName(new ItemStack(Items.CARROT), dataManager.getGuiText().pcLastPage))
                 .onClick(action -> {
                     LinkedPage linkedPage = (LinkedPage) action.getPage();
                     linkedPage = linkedPage.getNext();
@@ -141,22 +129,25 @@ public class PokeBuilderUI {
     public static GooeyPage attributesUI(ServerPlayer player) {
         PokeBuilderClickedData clickedData = getClickedData(player);
         Pokemon pokemon = clickedData.currentPokemon;
-        ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
-                .display(stack)
-                //.title(dataManager.getGuiText().back)
+                .display(setStackName(new ItemStack(Items.CARROT), dataManager.getGuiText().back))
                 .onClick(action -> UIManager.openUIForcefully(player, menuUI(player))).build();
 
-        ItemStack stack2 = new ItemStack(CobblemonItems.LIGHT_BALL);
-        stack2.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().shiny));
-        stack2.set(DataComponents.CUSTOM_DATA, null);
-        stack2.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().attrPokeDisabled))));
+        ItemStack shinyAttr = new ItemStack(CobblemonItems.LIGHT_BALL);
+        shinyAttr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        shinyAttr.set(DataComponents.CUSTOM_NAME, literal(regex(dataManager.getGuiText().shiny)));
+        shinyAttr.set(DataComponents.CUSTOM_DATA, null);
+
+        if(listContainsPokemon(dataManager.getGeneral().shinyBlacklistedPokemon, pokemon)){
+            shinyAttr.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal(regex(dataManager.getGuiText().attrPokeDisabled)))));
+        } else if (pokemon.getShiny() && !dataManager.getGeneral().allowShinyUnset) {
+            shinyAttr.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal(regex(dataManager.getGuiText().isShiny)))));
+        }else{
+            shinyAttr.set(DataComponents.LORE, new ItemLore(Collections.emptyList()));
+        }
+
         Button shiny = GooeyButton.builder()
-                .display(stack2)
-                //.title(dataManager.getGuiText().shiny)
+                .display(shinyAttr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().shinyBlacklistedPokemon, pokemon)) {
                         if (pokemon.getShiny()) {
@@ -168,130 +159,115 @@ public class PokeBuilderUI {
                         }
                     }
                 })
-                //.lore(Collections.singletonList(listContainsPokemon(dataManager.getGeneral().shinyBlacklistedPokemon, pokemon) ? (dataManager.getGuiText().attrPokeDisabled) : pokemon.getShiny() && !dataManager.getGeneral().allowShinyUnset ? (dataManager.getGuiText().isShiny) : null))
                 .build();
 
-        ItemStack stack3 = new ItemStack(CobblemonItems.MODEST_MINT);
-        stack3.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack3.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().nature));
-        stack3.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(listContainsPokemon(dataManager.getGeneral().natureBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : "" ))));
+        ItemStack natureAttr = new ItemStack(CobblemonItems.MODEST_MINT);
+        natureAttr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        natureAttr.set(DataComponents.CUSTOM_NAME, literal(regex(dataManager.getGuiText().nature)));
+        natureAttr.set(DataComponents.LORE,
+                new ItemLore(Collections.singletonList(literal(listContainsPokemon(dataManager.getGeneral().natureBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
         Button nature = GooeyButton.builder()
-                .display(stack3)
-                //.title(dataManager.getGuiText().nature)
+                .display(natureAttr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().natureBlacklistedPokemon, pokemon)) {
                         UIManager.openUIForcefully(player, naturesUI(player));
                     }
                 })
-                //.lore(Collections.singletonList(listContainsPokemon(dataManager.getGeneral().natureBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : null))
                 .build();
 
-        ItemStack stack4 = new ItemStack(CobblemonItems.RARE_CANDY);
-        stack4.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack4.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().level));
-        stack4.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(pokemon.getLevel() == Cobblemon.config.getMaxPokemonLevel() ? dataManager.getGuiText().isMaxLevel : listContainsPokemon(dataManager.getGeneral().levelBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
+        ItemStack levelAttr = new ItemStack(CobblemonItems.RARE_CANDY);
+        levelAttr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        levelAttr.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().level));
+        levelAttr.set(DataComponents.LORE,
+                new ItemLore(Collections.singletonList(literal(pokemon.getLevel() == Cobblemon.config.getMaxPokemonLevel() ? dataManager.getGuiText().isMaxLevel : listContainsPokemon(dataManager.getGeneral().levelBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
         Button level = GooeyButton.builder()
-                .display(stack4)
-                //.title(dataManager.getGuiText().level)
+                .display(levelAttr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().levelBlacklistedPokemon, pokemon) && pokemon.getLevel() != Cobblemon.config.getMaxPokemonLevel()) {
                         UIManager.openUIForcefully(player, levelsUI(player));
                     }
 
                 })
-                //.lore(Collections.singletonList(pokemon.getLevel() == Cobblemon.config.getMaxPokemonLevel() ? dataManager.getGuiText().isMaxLevel : listContainsPokemon(dataManager.getGeneral().levelBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : null))
                 .build();
 
 
-        ItemStack stack5 = new ItemStack(CobblemonItems.POKE_BALL);
-        stack5.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack5.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().ball));
-        stack5.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(listContainsPokemon(dataManager.getGeneral().ballBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
+        ItemStack ballAtr = new ItemStack(CobblemonItems.POKE_BALL);
+        ballAtr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        ballAtr.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().ball));
+        ballAtr.set(DataComponents.LORE,
+                new ItemLore(Collections.singletonList(literal(listContainsPokemon(dataManager.getGeneral().ballBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
 
         Button ball = GooeyButton.builder()
-                .display(stack5)
-                //.title(dataManager.getGuiText().ball)
+                .display(ballAtr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().ballBlacklistedPokemon, pokemon)) {
                         UIManager.openUIForcefully(player, ballsUI(player));
                     }
                 })
-                //.lore(Collections.singletonList(listContainsPokemon(dataManager.getGeneral().ballBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : null))
                 .build();
 
-        ItemStack stack6 = new ItemStack(CobblemonItems.IRON);
-        stack6.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack6.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().ivs));
-        stack6.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(listContainsPokemon(dataManager.getGeneral().ivBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
+        ItemStack ivAttr = new ItemStack(CobblemonItems.IRON);
+        ivAttr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        ivAttr.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().ivs));
+        ivAttr.set(DataComponents.LORE,
+                new ItemLore(Collections.singletonList(literal(listContainsPokemon(dataManager.getGeneral().ivBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
         Button ivs = GooeyButton.builder()
-                .display(stack6)
-                //.title(dataManager.getGuiText().ivs)
+                .display(ivAttr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().ivBlacklistedPokemon, pokemon)) {
                         UIManager.openUIForcefully(player, statSelectionUI(player, BuilderAttribute.IVS));
                     }
                 })
-                //.lore(Collections.singletonList(listContainsPokemon(dataManager.getGeneral().ivBlacklistedPokemon, pokemon) ? (dataManager.getGuiText().attrPokeDisabled) : null))
                 .build();
 
-        ItemStack stack7 = new ItemStack(CobblemonItems.CARBOS);
-        stack7.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack7.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().evs));
-        stack7.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(listContainsPokemon(dataManager.getGeneral().evBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
+        ItemStack evAttr = new ItemStack(CobblemonItems.CARBOS);
+        evAttr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        evAttr.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().evs));
+        evAttr.set(DataComponents.LORE,
+                new ItemLore(Collections.singletonList(literal(listContainsPokemon(dataManager.getGeneral().evBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
         Button evs = GooeyButton.builder()
-                .display(stack7)
-                //.title(dataManager.getGuiText().evs)
+                .display(evAttr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().ivBlacklistedPokemon, pokemon)) {
                         UIManager.openUIForcefully(player, statSelectionUI(player, BuilderAttribute.EVS));
                     }
                 })
-                //.lore(Collections.singletonList(listContainsPokemon(dataManager.getGeneral().evBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : null))
                 .build();
 
 
         boolean apply = canChangeGender(pokemon);
 
-        ItemStack stack8 = new ItemStack(CobblemonItems.CHOICE_SCARF);
-        stack8.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack8.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().gender));
-        stack8.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(!apply ? dataManager.getGuiText().genderChange : listContainsPokemon(dataManager.getGeneral().genderBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
+        ItemStack genderAttr = new ItemStack(CobblemonItems.CHOICE_SCARF);
+        genderAttr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        genderAttr.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().gender));
+        genderAttr.set(DataComponents.LORE,
+                new ItemLore(Collections.singletonList(literal(!apply ? dataManager.getGuiText().genderChange : listContainsPokemon(dataManager.getGeneral().genderBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : ""))));
         Button gender = GooeyButton.builder()
-                .display(stack8)
-                //.title(dataManager.getGuiText().gender)
+                .display(genderAttr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().genderBlacklistedPokemon, pokemon) && apply) {
                         UIManager.openUIForcefully(player, genderUI(player));
                     }
                 })
-                //.lore(Collections.singletonList(!apply ? dataManager.getGuiText().genderChange : listContainsPokemon(dataManager.getGeneral().genderBlacklistedPokemon, pokemon) ? dataManager.getGuiText().attrPokeDisabled : null))
                 .build();
 
 
         int validAbilities = pokemon.getSpecies().getAbilities().getMapping().keySet().size();
-        ItemStack stack9 = new ItemStack(CobblemonItems.ABILITY_CAPSULE);
-        stack9.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        stack9.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().ability));
-        stack9.set(DataComponents.LORE,
+        ItemStack abilityAttr = new ItemStack(CobblemonItems.ABILITY_CAPSULE);
+        abilityAttr.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
+        abilityAttr.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().ability));
+        abilityAttr.set(DataComponents.LORE,
                 new ItemLore(Collections.singletonList(
-                        validAbilities < 2 ? Component.literal(dataManager.getGuiText().abilityChange) :
-                                listContainsPokemon(dataManager.getGeneral().abilityBlacklistedPokemon, pokemon) ? Component.literal(dataManager.getGuiText().attrPokeDisabled) : Component.empty()
+                        validAbilities < 2 ? literal(dataManager.getGuiText().abilityChange) :
+                                listContainsPokemon(dataManager.getGeneral().abilityBlacklistedPokemon, pokemon) ? literal(dataManager.getGuiText().attrPokeDisabled) : Component.empty()
                 )));
         Button ability = GooeyButton.builder()
-                .display(stack9)
-                //.title(dataManager.getGuiText().ability)
+                .display(abilityAttr)
                 .onClick(action -> {
                     if (!listContainsPokemon(dataManager.getGeneral().abilityBlacklistedPokemon, pokemon) && validAbilities > 1) {
                         UIManager.openUIForcefully(player, abilityUI(player));
                     }
                 })
-                //.lore(Collections.singletonList(validAbilities < 2 ? dataManager.getGuiText().abilityChange : listContainsPokemon(dataManager.getGeneral().abilityBlacklistedPokemon, pokemon) ? (dataManager.getGuiText().attrPokeDisabled) : null))
                 .build();
 
 //        Button breedlock = GooeyButton.builder()
@@ -386,8 +362,8 @@ public class PokeBuilderUI {
         if (currentStat != null) currentStat.getDisplayName().getString();
 
         ItemStack stack = new ItemStack(Items.RED_WOOL);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().confirmDeny));
-        stack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().confirmDenyLore))));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().confirmDeny));
+        stack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal(dataManager.getGuiText().confirmDenyLore))));
         Button deny = GooeyButton.builder()
                 .display(stack)
                 //.title(dataManager.getGuiText().confirmDeny)
@@ -397,7 +373,7 @@ public class PokeBuilderUI {
 
 
         ItemStack stack2 = new ItemStack(Items.GREEN_WOOL);
-        stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().confirmAccept));
+        stack2.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().confirmAccept));
         GooeyButton.Builder confirmBuilder = GooeyButton.builder()
                 .display(stack2);
                 //.title(dataManager.getGuiText().confirmAccept);
@@ -425,15 +401,15 @@ public class PokeBuilderUI {
                 final String finalMsg = cfgMsg;
 
                 stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                        Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                        Component.literal(shinyText)
+                        literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                        literal(shinyText)
                 )));
                 confirmBuilder.display(stack2)
                         //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), shinyText))
                         .onClick(action -> {
                             if (canAfford(player, finalCost)) {
                                 pokemon.setShiny(setShiny);
-                                player.sendSystemMessage(Component.literal(finalMsg));
+                                player.sendSystemMessage(literal(finalMsg));
                                 UIManager.openUIForcefully(player, attributesUI(player));
                             }
                         }).build();
@@ -441,8 +417,8 @@ public class PokeBuilderUI {
             case NATURE:
                 Nature nature = clickedData.currentNature;
                 stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                        Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                        Component.literal(dataManager.getGuiText().setNature.replace("<nature>", Utils.parseLang(nature.getDisplayName())))
+                        literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                        literal(dataManager.getGuiText().setNature.replace("<nature>", Utils.parseLang(nature.getDisplayName())))
                 )));
                 confirmBuilder.display(stack2)
                         //.lore(Arrays.asList(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost), dataManager.getGuiText().setNature.replace("<nature>", Utils.parseLang(nature.getDisplayName()))))
@@ -452,7 +428,7 @@ public class PokeBuilderUI {
                                 String msg = dataManager.getMessages().natureSet;
                                 msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                 msg = msg.replace("<nature>", Utils.parseLang(nature.getDisplayName()));
-                                player.sendSystemMessage(Component.literal(msg));
+                                player.sendSystemMessage(literal(msg));
                                 UIManager.openUIForcefully(player, attributesUI(player));
                             }
 
@@ -460,8 +436,8 @@ public class PokeBuilderUI {
                 break;
             case LEVEL:
                 stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                        Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                        Component.literal(dataManager.getGuiText().setLevels.replace("<levels>", "" + clickedData.currentLevel))
+                        literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                        literal(dataManager.getGuiText().setLevels.replace("<levels>", "" + clickedData.currentLevel))
                 )));
                 int level = clickedData.currentLevel;
                 confirmBuilder.display(stack2)
@@ -472,7 +448,7 @@ public class PokeBuilderUI {
                                 String msg = dataManager.getMessages().lvlInc;
                                 msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                 msg = msg.replace("<level>", "" + level);
-                                player.sendSystemMessage(Component.literal(msg));
+                                player.sendSystemMessage(literal(msg));
                                 UIManager.openUIForcefully(player, attributesUI(player));
                                 PokemonEntity pe = pokemon.getEntity();
                                 if (pe != null && pe.getEvolutionEntity() != null) {
@@ -485,8 +461,8 @@ public class PokeBuilderUI {
                 PokeBall ball = clickedData.currentBall;
                 String ballName = new ItemStack(ball.item()).getDisplayName().getString().replaceAll("[\\[\\]]", "");
                 stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                        Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                        Component.literal(dataManager.getGuiText().setBall.replace("<ball>", ballName))
+                        literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                        literal(dataManager.getGuiText().setBall.replace("<ball>", ballName))
                 )));
                 confirmBuilder.display(stack2)
                         //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setBall.replace("<ball>", ballName))))
@@ -497,7 +473,7 @@ public class PokeBuilderUI {
                                 String msg = dataManager.getMessages().ballSet;
                                 msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                 msg = msg.replace("<ball>", ballName);
-                                player.sendSystemMessage(Component.literal(msg));
+                                player.sendSystemMessage(literal(msg));
                                 UIManager.openUIForcefully(player, attributesUI(player));
                             }
                         }).build();
@@ -505,8 +481,8 @@ public class PokeBuilderUI {
             case IVS:
                 if (isIncrease) {
                     stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                            Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                            Component.literal(dataManager.getGuiText().setIncIVs.replace("<iv>", "" + currentStatNum).replace("<stat>", statName))
+                            literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                            literal(dataManager.getGuiText().setIncIVs.replace("<iv>", "" + currentStatNum).replace("<stat>", statName))
                     )));
                     confirmBuilder.display(stack2)
                             //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setIncIVs.replace("<iv>", "" + currentStatNum).replace("<stat>", statName))))
@@ -517,14 +493,14 @@ public class PokeBuilderUI {
                                     msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                     msg = msg.replace("<stat>", statName);
                                     msg = msg.replace("<iv>", "" + currentStatNum);
-                                    player.sendSystemMessage(Component.literal(msg));
+                                    player.sendSystemMessage(literal(msg));
                                     UIManager.openUIForcefully(player, attributesUI(player));
                                 }
                             }).build();
                 } else {
                     stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                            Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                            Component.literal(dataManager.getGuiText().setDecIVs.replace("<iv>", "" + currentStatNum).replace("<stat>", statName))
+                            literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                            literal(dataManager.getGuiText().setDecIVs.replace("<iv>", "" + currentStatNum).replace("<stat>", statName))
                     )));
                     confirmBuilder.display(stack2)
                             //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setDecIVs.replace("<iv>", "" + currentStatNum).replace("<stat>", statName))))
@@ -535,7 +511,7 @@ public class PokeBuilderUI {
                                     msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                     msg = msg.replace("<stat>", statName);
                                     msg = msg.replace("<iv>", "" + currentStatNum);
-                                    player.sendSystemMessage(Component.literal(msg));
+                                    player.sendSystemMessage(literal(msg));
                                     UIManager.openUIForcefully(player, attributesUI(player));
                                 }
                             }).build();
@@ -543,8 +519,8 @@ public class PokeBuilderUI {
                 break;
             case MAX_IVS:
                 stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                        Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                        Component.literal(dataManager.getGuiText().setMaxIVs)
+                        literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                        literal(dataManager.getGuiText().setMaxIVs)
                 )));
                 confirmBuilder.display(stack2)
                         //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setMaxIVs)))
@@ -555,7 +531,7 @@ public class PokeBuilderUI {
                                 }
                                 String msg = dataManager.getMessages().ivMax;
                                 msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
-                                player.sendSystemMessage(Component.literal(msg));
+                                player.sendSystemMessage(literal(msg));
                                 UIManager.openUIForcefully(player, attributesUI(player));
                             }
                         }).build();
@@ -563,8 +539,8 @@ public class PokeBuilderUI {
             case EVS:
                 if (isIncrease) {
                     stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                            Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                            Component.literal(dataManager.getGuiText().setIncEVs.replace("<ev>", "" + currentStatNum).replace("<stat>", statName))
+                            literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                            literal(dataManager.getGuiText().setIncEVs.replace("<ev>", "" + currentStatNum).replace("<stat>", statName))
                     )));
                     confirmBuilder.display(stack2)
                             //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setIncEVs.replace("<ev>", "" + currentStatNum).replace("<stat>", statName))))
@@ -575,14 +551,14 @@ public class PokeBuilderUI {
                                     msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                     msg = msg.replace("<stat>", statName);
                                     msg = msg.replace("<ev>", "" + currentStatNum);
-                                    player.sendSystemMessage(Component.literal(msg));
+                                    player.sendSystemMessage(literal(msg));
                                     UIManager.openUIForcefully(player, attributesUI(player));
                                 }
                             }).build();
                 } else {
                     stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                            Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                            Component.literal(dataManager.getGuiText().setDecEVs.replace("<ev>", "" + currentStatNum).replace("<stat>", statName))
+                            literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                            literal(dataManager.getGuiText().setDecEVs.replace("<ev>", "" + currentStatNum).replace("<stat>", statName))
                     )));
                     confirmBuilder.display(stack2)
                             //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setDecEVs.replace("<ev>", "" + currentStatNum).replace("<stat>", statName))))
@@ -593,7 +569,7 @@ public class PokeBuilderUI {
                                     msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                     msg = msg.replace("<stat>", statName);
                                     msg = msg.replace("<ev>", "" + currentStatNum);
-                                    player.sendSystemMessage(Component.literal(msg));
+                                    player.sendSystemMessage(literal(msg));
                                     UIManager.openUIForcefully(player, attributesUI(player));
                                 }
                             }).build();
@@ -602,8 +578,8 @@ public class PokeBuilderUI {
             case GENDER:
                 Gender gender = clickedData.currentGender;
                 stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                        Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                        Component.literal(dataManager.getGuiText().setGender.replace("<gender>", gender.name().toLowerCase())))));
+                        literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                        literal(dataManager.getGuiText().setGender.replace("<gender>", gender.name().toLowerCase())))));
                 confirmBuilder.display(stack2)
                         //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setGender.replace("<gender>", gender.name().toLowerCase()))))
                         .onClick(action -> {
@@ -612,7 +588,7 @@ public class PokeBuilderUI {
                                 String msg = dataManager.getMessages().genderSet;
                                 msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                 msg = msg.replace("<gender>", gender.name().toLowerCase());
-                                player.sendSystemMessage(Component.literal(msg));
+                                player.sendSystemMessage(literal(msg));
                                 UIManager.openUIForcefully(player, attributesUI(player));
                             }
                         }).build();
@@ -621,8 +597,8 @@ public class PokeBuilderUI {
                 Ability ability = clickedData.currentAbility;
                 String abStr = Utils.parseLang(ability.getDisplayName());
                 stack2.set(DataComponents.LORE, new ItemLore(Arrays.asList(
-                        Component.literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
-                        Component.literal(dataManager.getGuiText().setAbility.replace("<ability>", abStr))
+                        literal(dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)),
+                        literal(dataManager.getGuiText().setAbility.replace("<ability>", abStr))
                 )));
                 confirmBuilder.display(stack2)
                         //.lore(Arrays.asList((dataManager.getGuiText().tokenCost.replace("<cost>", "" + finalCost)), (dataManager.getGuiText().setAbility.replace("<ability>", abStr))))
@@ -632,7 +608,7 @@ public class PokeBuilderUI {
                                 String msg = dataManager.getMessages().abilitySet;
                                 msg = msg.replace("<pokemon>", pokemon.getSpecies().getName());
                                 msg = msg.replace("<ability>", abStr);
-                                player.sendSystemMessage(Component.literal(msg));
+                                player.sendSystemMessage(literal(msg));
                                 UIManager.openUIForcefully(player, attributesUI(player));
                             }
                         }).build();
@@ -678,7 +654,7 @@ public class PokeBuilderUI {
         Pokemon pokemon = clickedData.currentPokemon;
 
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
                 .display(stack)
                 //.title((dataManager.getGuiText().back
@@ -700,7 +676,7 @@ public class PokeBuilderUI {
             case IVS:
                 ItemStack stack2 = new ItemStack(CobblemonItems.KINGS_ROCK);
                 stack2.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-                stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().maxIVs));
+                stack2.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().maxIVs));
                 GooeyButton.Builder maxIVBuilder = GooeyButton.builder()
                         .display(stack2)
                         //.title(((dataManager.getGuiText().maxIVs)))
@@ -709,7 +685,7 @@ public class PokeBuilderUI {
                         });
 
                 if(Utils.isMaxIVs(pokemon)){
-                    stack2.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().isMaxIVs))));
+                    stack2.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal(dataManager.getGuiText().isMaxIVs))));
                     maxIVBuilder.display(stack2);
                     //maxIVBuilder.lore(Collections.singletonList(dataManager.getGuiText().isMaxIVs));
                     maxIVBuilder.onClick(() -> {});
@@ -736,7 +712,7 @@ public class PokeBuilderUI {
         Pokemon pokemon = clickedData.currentPokemon;
 
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
                 .display(stack)
                 //.title((dataManager.getGuiText().back))
@@ -745,7 +721,7 @@ public class PokeBuilderUI {
         String spacedStat = clickedData.currentStat.getDisplayName().getString();
 
         ItemStack stack2 = new ItemStack(Items.GREEN_STAINED_GLASS);
-        stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statIncrease.replace("<stat>", spacedStat).replace("<attr>", attr.getName())));
+        stack2.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statIncrease.replace("<stat>", spacedStat).replace("<attr>", attr.getName())));
         GooeyButton.Builder increaseBuilder = GooeyButton.builder()
                 .display(stack2)
                 //.title((dataManager.getGuiText().statIncrease.replace("<stat>", spacedStat).replace("<attr>", attr.getName())))
@@ -756,7 +732,7 @@ public class PokeBuilderUI {
                 });
 
         ItemStack stack3 = new ItemStack(Items.RED_STAINED_GLASS);
-        stack3.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statDecrease.replace("<stat>", spacedStat).replace("<attr>", attr.getName())));
+        stack3.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statDecrease.replace("<stat>", spacedStat).replace("<attr>", attr.getName())));
         GooeyButton.Builder decreaseBuilder = GooeyButton.builder()
                 .display(stack3)
                 //.title((dataManager.getGuiText().statDecrease.replace("<stat>", spacedStat).replace("<attr>", attr.getName())))
@@ -795,7 +771,7 @@ public class PokeBuilderUI {
         boolean isIncrease = clickedData.isIncrease;
 
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
                 .display(stack)
                 //.title((dataManager.getGuiText().back))
@@ -807,11 +783,11 @@ public class PokeBuilderUI {
 
         ItemStack rareCandy = new ItemStack(CobblemonItems.RARE_CANDY);
         rareCandy.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        rareCandy.set(DataComponents.CUSTOM_NAME, Component.literal("§d§l+1"+ attr.getName()));
+        rareCandy.set(DataComponents.CUSTOM_NAME, literal("§d§l+1"+ attr.getName()));
         GooeyButton.Builder oneStatBuilder = GooeyButton.builder().display(rareCandy);
-        rareCandy.set(DataComponents.CUSTOM_NAME, Component.literal("§d§l+10"+ attr.getName()));
+        rareCandy.set(DataComponents.CUSTOM_NAME, literal("§d§l+10"+ attr.getName()));
         GooeyButton.Builder tenStatBuilder = GooeyButton.builder().display(rareCandy);
-        rareCandy.set(DataComponents.CUSTOM_NAME, Component.literal("§d§l+25"+ attr.getName()));
+        rareCandy.set(DataComponents.CUSTOM_NAME, literal("§d§l+25"+ attr.getName()));
         GooeyButton.Builder twentyFiveStatBuilder = GooeyButton.builder().display(rareCandy);
 
         oneStatBuilder.onClick(action -> {
@@ -936,7 +912,7 @@ public class PokeBuilderUI {
         PlaceholderButton placeholder = new PlaceholderButton();
 
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
                 .display(stack)
                 //.title((dataManager.getGuiText().back))
@@ -962,7 +938,7 @@ public class PokeBuilderUI {
         Pokemon pokemon = clickedData.currentPokemon;
 
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
                 .display(stack)
                 //.title((dataManager.getGuiText().back))
@@ -982,14 +958,14 @@ public class PokeBuilderUI {
         ItemStack tenLevelStack;
         if (pokemon.getLevel() + 1 > Cobblemon.config.getMaxPokemonLevel()) {
             oneLevelStack = new ItemStack(Blocks.BARRIER);
-            oneLevelStack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statIncreaseOneLevel));
-            oneLevelStack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().resultMaxLevel))));
+            oneLevelStack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statIncreaseOneLevel));
+            oneLevelStack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal(dataManager.getGuiText().resultMaxLevel))));
             oneLevelBuider
                     .display(oneLevelStack);
                     //.lore(Collections.singletonList((dataManager.getGuiText().resultMaxLevel)));
         } else {
             oneLevelStack = new ItemStack(CobblemonItems.RARE_CANDY);
-            oneLevelStack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statIncreaseOneLevel));
+            oneLevelStack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statIncreaseOneLevel));
             oneLevelBuider
                     .display(oneLevelStack)
                     .onClick(action -> {
@@ -1001,14 +977,14 @@ public class PokeBuilderUI {
 
         if (pokemon.getLevel() + 5 > Cobblemon.config.getMaxPokemonLevel()) {
             fiveLevelStack = new ItemStack(Blocks.BARRIER);
-            fiveLevelStack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statIncreaseFiveLevel));
-            fiveLevelStack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().resultMaxLevel))));
+            fiveLevelStack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statIncreaseFiveLevel));
+            fiveLevelStack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal(dataManager.getGuiText().resultMaxLevel))));
             fiveLevelBuider
                     .display(fiveLevelStack);
                     //.lore(Collections.singletonList((dataManager.getGuiText().resultMaxLevel)));
         } else {
             fiveLevelStack = new ItemStack(CobblemonItems.RARE_CANDY);
-            fiveLevelStack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statIncreaseFiveLevel));
+            fiveLevelStack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statIncreaseFiveLevel));
 
             fiveLevelBuider
                     .display(fiveLevelStack)
@@ -1021,14 +997,14 @@ public class PokeBuilderUI {
 
         if (pokemon.getLevel() + 10 > Cobblemon.config.getMaxPokemonLevel()) {
             tenLevelStack = new ItemStack(Blocks.BARRIER);
-            tenLevelStack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statIncreaseTenLevel));
-            tenLevelStack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal(dataManager.getGuiText().resultMaxLevel))));
+            tenLevelStack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statIncreaseTenLevel));
+            tenLevelStack.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal(dataManager.getGuiText().resultMaxLevel))));
             tenLevelBuider
                     .display(tenLevelStack);
                     //.lore(Collections.singletonList((dataManager.getGuiText().resultMaxLevel)));
         } else {
             tenLevelStack = new ItemStack(CobblemonItems.RARE_CANDY);
-            tenLevelStack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().statIncreaseTenLevel));
+            tenLevelStack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().statIncreaseTenLevel));
             tenLevelStack.set(DataComponents.LORE,null);
             tenLevelBuider
                     .display(tenLevelStack)
@@ -1065,14 +1041,14 @@ public class PokeBuilderUI {
         PlaceholderButton placeholder = new PlaceholderButton();
 
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
                 .display(stack)
                 //.title((dataManager.getGuiText().back))
                 .onClick(action -> UIManager.openUIForcefully(player, attributesUI(player))).build();
 
         ItemStack stack2 = new ItemStack(Items.ARROW);
-        stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().previous));
+        stack2.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().previous));
         LinkedPageButton previous = LinkedPageButton.builder()
                 .display(stack2)
                 //.title(dataManager.getGuiText().previous)
@@ -1080,7 +1056,7 @@ public class PokeBuilderUI {
                 .build();
 
         ItemStack stack3 = new ItemStack(Items.ARROW);
-        stack3.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().pcNextPage));
+        stack3.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().pcNextPage));
         LinkedPageButton next = LinkedPageButton.builder()
                 .display(stack3)
                 //.title(dataManager.getGuiText().pcNextPage)
@@ -1108,20 +1084,20 @@ public class PokeBuilderUI {
         PokeBuilderClickedData clickedData = getClickedData(player);
         Pokemon pokemon = clickedData.currentPokemon;
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         Button back = GooeyButton.builder()
                 .display(stack)
                 //.title((dataManager.getGuiText().back))
                 .onClick(action -> UIManager.openUIForcefully(player, attributesUI(player))).build();
 
         ItemStack stack2 = new ItemStack(Items.LIGHT_BLUE_WOOL);
-        stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().male));
+        stack2.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().male));
         GooeyButton.Builder maleBuilder = GooeyButton.builder()
                 //.title((dataManager.getGuiText().male))
                 .display(stack2);
 
         ItemStack stack3 = new ItemStack(Items.PINK_WOOL);
-        stack3.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().female));
+        stack3.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().female));
         GooeyButton.Builder femaleBuilder = GooeyButton.builder()
                 //.title((dataManager.getGuiText().female))
                 .display(stack3);
@@ -1152,7 +1128,7 @@ public class PokeBuilderUI {
         Pokemon pokemon = clickedData.currentPokemon;
 
         ItemStack stack = new ItemStack(Items.CARROT);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().back));
+        stack.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().back));
         stack.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
         Button back = GooeyButton.builder()
                 .display(stack)
@@ -1161,8 +1137,8 @@ public class PokeBuilderUI {
 
 
         ItemStack stack2 = new ItemStack(Items.BARRIER);
-        stack2.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().ability1));
-        stack2.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal("§cNot available."))));
+        stack2.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().ability1));
+        stack2.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal("§cNot available."))));
         GooeyButton.Builder ab1Builder = GooeyButton.builder()
                 //.title((dataManager.getGuiText().ability1))
                 .display(stack2)
@@ -1170,8 +1146,8 @@ public class PokeBuilderUI {
                 .onClick(action -> {});
 
         ItemStack stack3 = new ItemStack(Items.BARRIER);
-        stack3.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().ability2));
-        stack3.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal("§cNot available."))));
+        stack3.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().ability2));
+        stack3.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal("§cNot available."))));
 
         GooeyButton.Builder ab2Builder = GooeyButton.builder()
                 //.title((dataManager.getGuiText().ability2))
@@ -1180,8 +1156,8 @@ public class PokeBuilderUI {
                 .onClick(action -> {});
 
         ItemStack stack4 = new ItemStack(Items.BARRIER);
-        stack4.set(DataComponents.CUSTOM_NAME, Component.literal(dataManager.getGuiText().ability3));
-        stack4.set(DataComponents.LORE, new ItemLore(Collections.singletonList(Component.literal("§cNot available."))));
+        stack4.set(DataComponents.CUSTOM_NAME, literal(dataManager.getGuiText().ability3));
+        stack4.set(DataComponents.LORE, new ItemLore(Collections.singletonList(literal("§cNot available."))));
         GooeyButton.Builder ab3Builder = GooeyButton.builder()
                 //.title((dataManager.getGuiText().ability3))
                 .display(stack4)
