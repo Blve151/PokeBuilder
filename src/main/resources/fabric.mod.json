@@ -12,9 +12,6 @@
 	"icon": "assets/PokeBuilder/icon.png",
 	"environment": "server",
 	"entrypoints": {
-		"client": [
-			"dev.blu3.pokebuilder.client.PokeBuilderClient"
-		],
 		"main": [
 			"dev.blu3.pokebuilder.PokeBuilder"
 		]
@@ -24,6 +21,6 @@
 		"fabric": "*",
 		"gooeylibs": "*",
 		"cobblemon": "*",
-		"minecraft": "*"
+		"minecraft": "1.21.1"
 	}
 }
