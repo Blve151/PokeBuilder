@@ -20,6 +20,7 @@ import com.cobblemon.mod.common.pokemon.*;
 import dev.blu3.pokebuilder.PokeBuilder;
 import dev.blu3.pokebuilder.enums.BuilderAttribute;
 import dev.blu3.pokebuilder.enums.BuilderSelection;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -304,7 +305,7 @@ public class ButtonUtils {
         int count = 0;
 
         for (Ability ability : abilities) {
-            Pokemon clone = pokemon.clone(true);
+            Pokemon clone = pokemon.clone(true, RegistryAccess.EMPTY);
             clone.updateAbility(ability);
             final boolean ha = Utils.isHA(clone);
             switch (count) {
@@ -353,13 +354,10 @@ public class ButtonUtils {
     private static void buildAbilityOption(GooeyButton.Builder builder, Ability ability, boolean ha, ServerPlayer player) {
         ItemStack itemStack = new ItemStack(CobblemonItems.ABILITY_CAPSULE);
         itemStack.set(DataComponents.HIDE_ADDITIONAL_TOOLTIP, Unit.INSTANCE);
-        itemStack.set(DataComponents.LORE,
-                new ItemLore(Collections.singletonList(Component.literal(ha ? "§b"
-                        + ability.getDisplayName() + " §7(§6HA§7)" : "§b"
-                        + ability.getDisplayName()))));
         builder
-                .display(itemStack)
-                //.lore(Collections.singletonList((ha ? "§b" + Utils.parseLang(ability.getDisplayName()) + " §7(§6HA§7)" : "§b" + Utils.parseLang(ability.getDisplayName()))))
+                .display(setStackName(itemStack, ha ? "§b"
+                        + Utils.parseLang(ability.getDisplayName()) + " §7(§6HA§7)" : "§b"
+                        + Utils.parseLang(ability.getDisplayName())))
                 .onClick(action -> {
                     PokeBuilderClickedData clickedData = getClickedData(player);
                     clickedData.currentAbility = ability;
