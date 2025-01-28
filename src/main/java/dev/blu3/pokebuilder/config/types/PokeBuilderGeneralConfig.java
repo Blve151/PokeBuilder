@@ -7,7 +7,7 @@ import java.util.List;
 
 public class PokeBuilderGeneralConfig {
     public boolean useLegacyTokens = true;
-
+    public String impactorCurrencyKey = "impactor:default";
     public boolean allowShinyUnset = false;
     public List<String> costMultipliedPokemon = new ArrayList<>();
     public List<String> blacklistedPokemon = Lists.newArrayList("legend", "ultrabeast");

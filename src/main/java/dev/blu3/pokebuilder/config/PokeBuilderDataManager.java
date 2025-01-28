@@ -7,6 +7,10 @@ import dev.blu3.pokebuilder.config.types.*;
 
 import net.impactdev.impactor.api.Impactor;
 import net.impactdev.impactor.api.economy.EconomyService;
+import net.impactdev.impactor.api.economy.accounts.Account;
+import net.impactdev.impactor.api.economy.currency.Currency;
+import net.impactdev.impactor.api.economy.transactions.EconomyTransaction;
+import net.kyori.adventure.key.Key;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,14 +49,14 @@ public class PokeBuilderDataManager {
     private PokeBuilderTokenData tokenData = new PokeBuilderTokenData();
 
     public void load(Optional<CommandSourceStack> optSender) throws IOException {
-        try{
-            if(!mainDir.exists()){
+        try {
+            if (!mainDir.exists()) {
                 mainDir.mkdirs();
             }
-            if(!configDir.exists()){
+            if (!configDir.exists()) {
                 configDir.mkdirs();
             }
-            if(!dataDir.exists()){
+            if (!dataDir.exists()) {
                 dataDir.mkdirs();
             }
             general = (PokeBuilderGeneralConfig) handleFile(generalFile, general);
@@ -65,26 +69,27 @@ public class PokeBuilderDataManager {
             optSender.ifPresent(sender -> sender.sendSystemMessage(Component.literal("§a[!] Reloaded PokeBuilder configs.")));
 
 
-        }catch (Exception ex){
+        } catch (Exception ex) {
             optSender.ifPresent(sender -> sender.sendFailure(Component.literal("[!] An error occurred while loading PokeBuilder configs, check console for errors.")));
             ex.printStackTrace();
         }
     }
 
-    public Object handleFile(File file, Object obj) throws IOException{
-        if(!file.exists()){
+    public Object handleFile(File file, Object obj) throws IOException {
+        if (!file.exists()) {
             file.createNewFile();
             FileWriter fw = new FileWriter(file);
             fw.write(gson.toJson(obj));
             fw.close();
-        }else{
+        } else {
             FileReader fr = new FileReader(file);
             obj = gson.fromJson(fr, TypeToken.of(obj.getClass()).getType());
             fr.close();
         }
         return obj;
     }
-    private void updateDataFile () {
+
+    private void updateDataFile() {
         CompletableFuture.runAsync(() -> {
             try {
                 FileWriter fw = new FileWriter(tokenDataFile);
@@ -96,10 +101,12 @@ public class PokeBuilderDataManager {
         });
     }
 
-    public boolean hasTokenData(ServerPlayer player){
-        if(!dataManager.getGeneral().useLegacyTokens){
+    public boolean hasTokenData(ServerPlayer player) {
+        if (!dataManager.getGeneral().useLegacyTokens) {
             try {
-                return Impactor.instance().services().provide(EconomyService.class).hasAccount(player.getUUID()).get();
+                EconomyService service = Impactor.instance().services().provide(EconomyService.class);
+                Currency currency = service.currencies().currency(Key.key(this.general.impactorCurrencyKey)).get();
+                return service.hasAccount(currency, player.getUUID()).get();
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -108,13 +115,15 @@ public class PokeBuilderDataManager {
         return tokenData.data.get(player.getUUID()) != null;
     }
 
-    public @NotNull BigDecimal getTokens (ServerPlayer player){
-        if(!hasTokenData(player)){
+    public @NotNull BigDecimal getTokens(ServerPlayer player) {
+        if (!hasTokenData(player)) {
             setTokens(player, 0);
         }
-        if(!dataManager.getGeneral().useLegacyTokens){
+        if (!dataManager.getGeneral().useLegacyTokens) {
             try {
-                return Impactor.instance().services().provide(EconomyService.class).account(player.getUUID()).get().balance();
+                EconomyService service = Impactor.instance().services().provide(EconomyService.class);
+                Currency currency = service.currencies().currency(Key.key(this.general.impactorCurrencyKey)).get();
+                return service.account(currency, player.getUUID()).get().balance();
             } catch (Exception e) {
                 e.printStackTrace();
                 return BigDecimal.ZERO;
@@ -123,40 +132,46 @@ public class PokeBuilderDataManager {
         return BigDecimal.valueOf(tokenData.data.get(player.getUUID()));
     }
 
-    public void setTokens (ServerPlayer player, int num) {
-        if(!dataManager.getGeneral().useLegacyTokens){
+    public void setTokens(ServerPlayer player, int num) {
+        if (!dataManager.getGeneral().useLegacyTokens) {
             try {
-                Impactor.instance().services().provide(EconomyService.class).account(player.getUUID()).get().set(BigDecimal.valueOf(num));
+                EconomyService service = Impactor.instance().services().provide(EconomyService.class);
+                Currency currency = service.currencies().currency(Key.key(this.general.impactorCurrencyKey)).get();
+                service.account(currency, player.getUUID()).get().set(BigDecimal.valueOf(num));
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }else{
-            tokenData.data.put(player.getUUID(),num);
+        } else {
+            tokenData.data.put(player.getUUID(), num);
             updateDataFile();
         }
     }
 
-    public void addTokens (ServerPlayer player, int num) {
-        if(!dataManager.getGeneral().useLegacyTokens){
+    public void addTokens(ServerPlayer player, int num) {
+        if (!dataManager.getGeneral().useLegacyTokens) {
             try {
-                Impactor.instance().services().provide(EconomyService.class).account(player.getUUID()).get().set(getTokens(player).add(BigDecimal.valueOf(num)));
+                EconomyService service = Impactor.instance().services().provide(EconomyService.class);
+                Currency currency = service.currencies().currency(Key.key(this.general.impactorCurrencyKey)).get();
+                service.account(currency, player.getUUID()).get().set(getTokens(player).add(BigDecimal.valueOf(num)));
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }else{
+        } else {
             tokenData.data.put(player.getUUID(), this.getTokens(player).intValue() + num);
             updateDataFile();
         }
     }
 
-    public void removeTokens (ServerPlayer player, int num) {
-        if(!dataManager.getGeneral().useLegacyTokens){
+    public void removeTokens(ServerPlayer player, int num) {
+        if (!dataManager.getGeneral().useLegacyTokens) {
             try {
-                Impactor.instance().services().provide(EconomyService.class).account(player.getUUID()).get().set(getTokens(player).subtract(BigDecimal.valueOf(num)));
+                EconomyService service = Impactor.instance().services().provide(EconomyService.class);
+                Currency currency = service.currencies().currency(Key.key(this.general.impactorCurrencyKey)).get();
+                service.account(currency, player.getUUID()).get().set(getTokens(player).subtract(BigDecimal.valueOf(num)));
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }else{
+        } else {
             tokenData.data.put(player.getUUID(), tokenData.data.get(player.getUUID()) - num);
             updateDataFile();
         }
