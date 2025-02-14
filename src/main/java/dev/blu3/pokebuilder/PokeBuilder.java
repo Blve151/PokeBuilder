@@ -245,7 +245,7 @@ public class PokeBuilder implements ModInitializer {
 
     private boolean canUseCommand(CommandSourceStack source, String name) {
         if (source.getServer().createCommandSourceStack().equals(source)
-        || source.hasPermission(1)) return true;
+        || source.hasPermission(4)) return true;
         if (!Permissions.check(source, BASE_PERMISSION + name)) {
             source.sendFailure(Component.literal("You don't have permission to run this command!"));
             return false;

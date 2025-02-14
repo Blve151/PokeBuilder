@@ -86,7 +86,10 @@ public class Utils {
     }
 
     public static boolean listContainsPokemon(List<String> list, Pokemon pokemon) {
-        return list.contains(pokemon.getSpecies().getName()) || list.contains("legend") && pokemon.isLegendary() || list.contains("ultrabeast") && pokemon.isUltraBeast();
+        return list.contains(pokemon.getSpecies().getName().toLowerCase())
+                || list.contains("legend") && pokemon.isLegendary() ||
+                list.contains("ultrabeast") && pokemon.isUltraBeast()
+                || list.contains("mythical") && pokemon.isMythical();
     }
 
     public static ItemStack removeTooltips(ItemStack stack) {
