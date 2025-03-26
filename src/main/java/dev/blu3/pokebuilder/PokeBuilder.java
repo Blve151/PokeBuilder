@@ -76,7 +76,7 @@ public class PokeBuilder implements ModInitializer {
                         .executes(context -> {
                             CommandSourceStack src = context.getSource();
                             ServerPlayer player = EntityArgument.getPlayer(context, "player");
-                            if(canUseCommand(src, "pokebuilder.other")){
+                            if(canUseCommand(src, "other.pokebuilder")){
                                 UIManager.openUIForcefully(player, PokeBuilderUI.menuUI(player));
                             } else {
                                 src.sendFailure(Component.literal("You need permission to open the UI for another player!"));
@@ -107,15 +107,16 @@ public class PokeBuilder implements ModInitializer {
                         src.sendFailure(Component.literal("You need to be a player if you don't provide an argument."));
                         return 1;
                     }
-                    sendBalanceMessage(player, context.getSource());
+
+                    sendBalanceMessage(player, context.getSource(), dataManager.getMessages().othersToken);
                     return 1;
                 })
                 .then(argument("player", EntityArgument.player())
                         .executes(context -> {
                             CommandSourceStack src = context.getSource();
                             ServerPlayer player = EntityArgument.getPlayer(context, "player");
-                            if(canUseCommand(src, "tokens.other")){
-                                sendBalanceMessage(player, src);
+                            if(canUseCommand(src, "other.tokens")){
+                                sendBalanceMessage(player, src, dataManager.getMessages().othersToken);
                             } else {
                                 src.sendFailure(Component.literal("You need permission to view the token balance of another player!"));
                             }
@@ -219,25 +220,15 @@ public class PokeBuilder implements ModInitializer {
                             }
 
                             dataManager.removeTokens(cmdPlayer, input);
-                            dataManager.addTokens(cmdPlayer, input);
+                            sendBalanceMessage(cmdPlayer, cmdPlayer.createCommandSourceStack(), dataManager.getMessages().senderTokensPay);
 
-                            String msg = dataManager.getMessages().senderTokensPay;
-                            msg = msg.replace("<tokens>", input + "");
-                            msg = msg.replace("<playerName>", cmdPlayer.getName().getString());
-                            player.sendSystemMessage(Component.literal(msg));
-                            player.sendSystemMessage(Component.literal(dataManager.getMessages().currentBal.replace("<tokens>", "" + dataManager.getTokens(cmdPlayer))));
-
-                            String msg2 = dataManager.getMessages().receiverTokensPay;
-                            msg2 = msg2.replace("<tokens>", input + "");
-                            msg2 = msg2.replace("<playerName>", cmdPlayer.getName().getString());
-                            cmdPlayer.sendSystemMessage(Component.literal(msg2));
-                            cmdPlayer.sendSystemMessage(Component.literal(dataManager.getMessages().currentBal.replace("<tokens>", "" + dataManager.getTokens(cmdPlayer))));
+                            dataManager.addTokens(player, input);
+                            sendBalanceMessage(player, player.createCommandSourceStack(), dataManager.getMessages().receiverTokensPay);
                             return 1;
                         })))));
     }
 
-    private void sendBalanceMessage(ServerPlayer tokenPlayer, CommandSourceStack source) {
-        String msg = dataManager.getMessages().othersToken;
+    private void sendBalanceMessage(ServerPlayer tokenPlayer, CommandSourceStack source, String msg) {
         msg = msg.replace("<playerName>", tokenPlayer.getName().getString());
         msg = msg.replace("<tokens>", "" + dataManager.getTokens(tokenPlayer));
         source.sendSystemMessage(Component.literal(msg));
