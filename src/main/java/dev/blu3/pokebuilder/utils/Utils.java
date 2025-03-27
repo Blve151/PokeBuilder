@@ -113,6 +113,7 @@ public class Utils {
 
     public static boolean canAfford(ServerPlayer player, int cost) {
         int tokens = dataManager.getTokens(player).intValue();
+        if(tokens < 0) dataManager.setTokens(player, 0);
         if (tokens < cost) {
             player.sendSystemMessage(Component.literal(dataManager.getMessages().cantAfford));
             player.sendSystemMessage(Component.literal(dataManager.getMessages().currentBal.replace("<tokens>", tokens + "")));

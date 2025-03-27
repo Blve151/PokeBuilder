@@ -108,7 +108,9 @@ public class PokeBuilder implements ModInitializer {
                         return 1;
                     }
 
-                    sendBalanceMessage(player, context.getSource(), dataManager.getMessages().othersToken);
+                    String msg = dataManager.getMessages().selfToken;
+                    msg = msg.replace("<tokens>", dataManager.getTokens(player) + "");
+                    context.getSource().sendSystemMessage(Component.literal(msg));
                     return 1;
                 })
                 .then(argument("player", EntityArgument.player())
@@ -116,7 +118,10 @@ public class PokeBuilder implements ModInitializer {
                             CommandSourceStack src = context.getSource();
                             ServerPlayer player = EntityArgument.getPlayer(context, "player");
                             if(canUseCommand(src, "other.tokens")){
-                                sendBalanceMessage(player, src, dataManager.getMessages().othersToken);
+                                String msg = dataManager.getMessages().othersToken;
+                                msg = msg.replace("<tokens>", dataManager.getTokens(player) + "");
+                                msg = msg.replace("<playerName>", player.getName().toString());
+                                context.getSource().sendSystemMessage(Component.literal(msg));
                             } else {
                                 src.sendFailure(Component.literal("You need permission to view the token balance of another player!"));
                             }
@@ -163,9 +168,7 @@ public class PokeBuilder implements ModInitializer {
                             String msgRec1 = dataManager.getMessages().receiverTokensAdd;
                             msgRec1 = msgRec1.replace("<tokens>", input + "");
                             player.sendSystemMessage(Component.literal(msgRec1));
-                            String msgRec2 = dataManager.getMessages().currentBal;
-                            msgRec2 = msgRec2.replace("<tokens>", "" + dataManager.getTokens(player));
-                            player.sendSystemMessage(Component.literal(msgRec2));
+                            sendBalanceMessage(player, context.getSource());
                             return 1;
                         })))));
 
@@ -187,9 +190,7 @@ public class PokeBuilder implements ModInitializer {
                             String msgRec1 = dataManager.getMessages().receiverTokensRemove;
                             msgRec1 = msgRec1.replace("<tokens>", input + "");
                             player.sendSystemMessage(Component.literal(msgRec1));
-                            String msgRec2 = dataManager.getMessages().currentBal;
-                            msgRec2 = msgRec2.replace("<tokens>", "" + dataManager.getTokens(player));
-                            player.sendSystemMessage(Component.literal(msgRec2));
+                            sendBalanceMessage(player, player.createCommandSourceStack());
                             return 1;
                         })))));
 
@@ -207,28 +208,28 @@ public class PokeBuilder implements ModInitializer {
 
                             int input = IntegerArgumentType.getInteger(context, "amount");
                             if (player.getName().equals(cmdPlayer.getName())) {
-                                cmdPlayer.sendSystemMessage(Component.literal(dataManager.getMessages().cantSelfPay));
+                                player.sendSystemMessage(Component.literal(dataManager.getMessages().cantSelfPay));
                                 return 1;
                             }
-                            if (input > dataManager.getTokens(cmdPlayer).intValue()) {
-                                cmdPlayer.sendSystemMessage(Component.literal(dataManager.getMessages().payTooHigh));
+                            if (input > dataManager.getTokens(player).intValue()) {
+                                player.sendSystemMessage(Component.literal(dataManager.getMessages().payTooHigh));
                                 return 1;
                             }
                             if (input < 1) {
-                                cmdPlayer.sendSystemMessage(Component.literal(dataManager.getMessages().payTooLow));
+                                player.sendSystemMessage(Component.literal(dataManager.getMessages().payTooLow));
                                 return 1;
                             }
 
-                            dataManager.removeTokens(cmdPlayer, input);
-                            dataManager.addTokens(player, input);
+                            dataManager.removeTokens(player, input);
+                            dataManager.addTokens(cmdPlayer, input);
 
-                            cmdPlayer.sendSystemMessage(Component.literal(dataManager.getMessages().senderTokensPay
-                                    .replace("<playerName>", player.getName().getString()
-                                            .replace("<tokens>", input + ""))));
+                            player.sendSystemMessage(Component.literal(dataManager.getMessages().senderTokensPay
+                                    .replace("<playerName>", cmdPlayer.getName().getString())
+                                            .replace("<tokens>", input + "")));
 
-                            player.sendSystemMessage(Component.literal(dataManager.getMessages().receiverTokensPay
-                                    .replace("<playerName>", cmdPlayer.getName().getString()
-                                            .replace("<tokens>", input + ""))));
+                            cmdPlayer.sendSystemMessage(Component.literal(dataManager.getMessages().receiverTokensPay
+                                    .replace("<playerName>", player.getName().getString())
+                                            .replace("<tokens>", input + "")));
 
                             sendBalanceMessage(cmdPlayer, cmdPlayer.createCommandSourceStack());
                             sendBalanceMessage(player, player.createCommandSourceStack());
