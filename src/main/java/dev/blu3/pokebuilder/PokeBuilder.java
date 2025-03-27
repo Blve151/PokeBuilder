@@ -220,15 +220,24 @@ public class PokeBuilder implements ModInitializer {
                             }
 
                             dataManager.removeTokens(cmdPlayer, input);
-                            sendBalanceMessage(cmdPlayer, cmdPlayer.createCommandSourceStack(), dataManager.getMessages().senderTokensPay);
-
                             dataManager.addTokens(player, input);
-                            sendBalanceMessage(player, player.createCommandSourceStack(), dataManager.getMessages().receiverTokensPay);
+
+                            cmdPlayer.sendSystemMessage(Component.literal(dataManager.getMessages().senderTokensPay
+                                    .replace("<playerName>", player.getName().getString()
+                                            .replace("<tokens>", input + ""))));
+
+                            player.sendSystemMessage(Component.literal(dataManager.getMessages().receiverTokensPay
+                                    .replace("<playerName>", cmdPlayer.getName().getString()
+                                            .replace("<tokens>", input + ""))));
+
+                            sendBalanceMessage(cmdPlayer, cmdPlayer.createCommandSourceStack());
+                            sendBalanceMessage(player, player.createCommandSourceStack());
                             return 1;
                         })))));
     }
 
-    private void sendBalanceMessage(ServerPlayer tokenPlayer, CommandSourceStack source, String msg) {
+    private void sendBalanceMessage(ServerPlayer tokenPlayer, CommandSourceStack source) {
+        String msg = dataManager.getMessages().currentBal;
         msg = msg.replace("<playerName>", tokenPlayer.getName().getString());
         msg = msg.replace("<tokens>", "" + dataManager.getTokens(tokenPlayer));
         source.sendSystemMessage(Component.literal(msg));
